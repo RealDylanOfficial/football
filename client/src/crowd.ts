@@ -58,7 +58,8 @@ class Spectator extends THREE.Scene {
         color: Colour,
       });
       this.head = new THREE.Mesh(geometry, material);
-      this.head.position.y = 4.6;
+      //this.head.position.y = 4.6;
+      this.head.position.y = 2.0;
       this.add(this.head);
     }
 
@@ -66,7 +67,8 @@ class Spectator extends THREE.Scene {
       const geometry = new THREE.BoxGeometry(0.95, 1.5, 0.55);
       const material = new THREE.MeshBasicMaterial({ color: Colour });
       this.body = new THREE.Mesh(geometry, material);
-      this.body.position.y = 3.35;
+      //this.body.position.y = 3.35;
+      this.body.position.y = 0.75;
       this.add(this.body);
 
       console.log(this.body.quaternion);

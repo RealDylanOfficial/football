@@ -14,7 +14,7 @@ export class CustomMap extends THREE.Scene {
     light1.position.set(5, 5, 0);
     this.add(light1);
 
-    const light2 = new THREE.AmbientLight(0x404040, 5); // soft white light
+    const light2 = new THREE.AmbientLight(0x404040, 3); // soft white light
     this.add(light2);
 
     const planeGeometry = new THREE.PlaneGeometry(40, 50); // Actual pitch is 30x40
@@ -27,21 +27,25 @@ export class CustomMap extends THREE.Scene {
     plane.rotation.setFromVector3(rotation);
     this.add(plane);
 
-    const sideAGeometry = new THREE.PlaneGeometry(11.25, 5);
-    const sideAMaterial = new THREE.MeshBasicMaterial({
-      color: 0x404040,
+    const sideAGeometry = new THREE.PlaneGeometry(11.25, 2.5);
+    const redMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff00000,
       side: THREE.DoubleSide,
     });
-    const side1a = new THREE.Mesh(sideAGeometry, sideAMaterial);
-    const side2a = new THREE.Mesh(sideAGeometry, sideAMaterial);
+    const blueMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+      side: THREE.DoubleSide,
+    });
+    const side1a = new THREE.Mesh(sideAGeometry, redMaterial);
+    const side2a = new THREE.Mesh(sideAGeometry, blueMaterial);
     side1a.position.z = 20;
     side1a.position.x = -9.375;
     side2a.position.z = -20;
     side2a.position.x = 9.375;
     this.add(side1a);
     this.add(side2a);
-    const side1b = new THREE.Mesh(sideAGeometry, sideAMaterial);
-    const side2b = new THREE.Mesh(sideAGeometry, sideAMaterial);
+    const side1b = new THREE.Mesh(sideAGeometry, redMaterial);
+    const side2b = new THREE.Mesh(sideAGeometry, blueMaterial);
     side1b.position.z = 20;
     side1b.position.x = 9.375;
     side2b.position.z = -20;
@@ -49,9 +53,9 @@ export class CustomMap extends THREE.Scene {
     this.add(side1b);
     this.add(side2b);
 
-    const sideBGeometry = new THREE.PlaneGeometry(40, 5);
+    const sideBGeometry = new THREE.PlaneGeometry(40, 2.5);
     const sideBMaterial = new THREE.MeshBasicMaterial({
-      color: 0x404040,
+      color: 0x606060,
       side: THREE.DoubleSide,
     });
     const sideBRotation = new THREE.Vector3(0, Math.PI / 2, 0);
@@ -63,6 +67,14 @@ export class CustomMap extends THREE.Scene {
     side4.position.x = -15;
     this.add(side3);
     this.add(side4);
+    const side5 = new THREE.Mesh(sideBGeometry, redMaterial);
+    const side6 = new THREE.Mesh(sideBGeometry, blueMaterial);
+    side5.rotation.setFromVector3(sideBRotation);
+    side5.position.x = 15;
+    side6.rotation.setFromVector3(sideBRotation);
+    side6.position.x = -15;
+    this.add(side5);
+    this.add(side6);
 
     const goal1 = new Goal();
     goal1.position.z = 20;
@@ -75,6 +87,22 @@ export class CustomMap extends THREE.Scene {
 
     this.add(goal2);
 
+    var loader = new THREE.TextureLoader();
+    loader.load("PITCH.png", (texture) => {
+      var geometry = new THREE.PlaneGeometry(30, 40);
+
+      var material = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide,
+        map: texture,
+        transparent: true,
+      });
+      var lines = new THREE.Mesh(geometry, material);
+      lines.rotation.setFromVector3(rotation);
+      lines.position.y = 0.05;
+      this.add(lines);
+    });
+
     this.add(new Crowd());
 
     // GRASS
@@ -86,8 +114,8 @@ export class CustomMap extends THREE.Scene {
 
     const clock = new THREE.Clock();
 
-    for (let x = -13.5; x <= 13.5; x += xWidth) {
-      for (let z = -18; z <= 18; z += zWidth) {
+    for (let x = -15 + xWidth / 2; x <= 15 - xWidth / 2; x += xWidth) {
+      for (let z = -22 + zWidth / 2; z <= 22 - zWidth / 2; z += zWidth) {
         const distance = Math.hypot(position.x - x, position.z - z);
         const density = 10000 / (Math.pow(distance, 2) + 10) + 5;
         console.log(x, z, distance, density);

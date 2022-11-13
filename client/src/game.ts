@@ -8,7 +8,7 @@ import { Player } from "./player";
 export type Position = { x: number; y: number; z: number };
 
 export type Players = {
-  [key: string]: { position: Position; looking: Quaternion };
+  [key: string]: { position: Position; looking: Quaternion; team: number };
 };
 
 /**
@@ -17,7 +17,8 @@ export type Players = {
 export class Game {
   clock = new THREE.Clock();
   scene = new THREE.Scene();
-  renderer = new THREE.WebGLRenderer();
+  renderer = new THREE.WebGLRenderer({ alpha: true });
+
   camera: THREE.PerspectiveCamera;
   controls: PointerLockControls;
   ball = new Ball();
@@ -41,14 +42,14 @@ export class Game {
     this.id = id;
     this.players = players;
 
-    Object.entries(players).forEach(([id, { position }]) => {
-      this.playerJoined(id, position);
+    Object.entries(players).forEach(([id, { position, team }]) => {
+      this.playerJoined(id, position, team);
     });
 
     this.map = new CustomMap({ x: 0, y: 0, z: 0 });
 
     this.camera = new THREE.PerspectiveCamera(
-      75,
+      103,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
@@ -58,9 +59,12 @@ export class Game {
 
     this.controls = new PointerLockControls(this.camera, document.body);
 
+    this.renderer.setClearColor(0x000000, 0); // the default
     this.renderer.domElement.addEventListener("click", () => {
       this.controls.lock();
     });
+
+    this.renderer.setPixelRatio(devicePixelRatio);
 
     this.controls.addEventListener("change", () => {
       setRotation({
@@ -88,15 +92,15 @@ export class Game {
     this.scene.add(this.ball);
 
     this.camera.position.z = 5;
-
+    this.camera.position.y += Math.sin(1 * 10) * 1.5; //attempt to head bob
     this.animate();
   }
 
-  playerJoined = (id: string, { x, y, z }: Position) => {
+  playerJoined = (id: string, { x, y, z }: Position, team: number) => {
     console.log(id, x, y, z);
 
     if (id !== this.id) {
-      const player = new Player();
+      const player = new Player(team);
       player.position.set(x, y, z);
       this.scene.add(player);
 

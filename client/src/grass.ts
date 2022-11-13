@@ -114,7 +114,7 @@ export class Grass extends THREE.Scene {
     for (let i = 0; i < n; i++) {
       const x = (Math.random() - 0.5) * this.width;
       const z = (Math.random() - 0.5) * this.height;
-      dummy.position.set(x, 0, z + 100);
+      dummy.position.set(x, 0, z);
 
       dummy.scale.setScalar((0.5 + Math.random() * 0.5) * 0.2);
 

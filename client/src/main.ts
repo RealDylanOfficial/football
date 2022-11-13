@@ -1,4 +1,4 @@
-import { Game, Position } from "./game";
+import { Game } from "./game";
 import { io } from "socket.io-client";
 
 // Connects to the server
@@ -11,18 +11,64 @@ export interface Quaternion {
   w: number;
 }
 
-socket.on("start", ({ id, players }) => {
+function setScores(score: [number, number]) {
+  const team1 = document.getElementById("team0");
+  const team2 = document.getElementById("team1");
+
+  if (team1 && team2) {
+    team1.innerText = score[0].toString();
+    team2.innerText = score[1].toString();
+  }
+}
+
+socket.on("start", ({ id, players, score, team }) => {
+  setScores(score);
+
+  const scoreElement = document.getElementById(`team${team}`);
+  console.log(scoreElement);
+
+  if (scoreElement) {
+    scoreElement.style.color = "yellow";
+  }
+
   console.log(id, players);
   const game = new Game(id, players, (quaternion: Quaternion) => {
     socket.emit("set looking", quaternion);
   });
 
-  socket.on("player joined", ({ id, state: { position } }) => {
-    game.playerJoined(id, position);
+  socket.on("update clock", (time) => {
+    console.log(time);
+    const element = document.getElementById("timer");
+
+    if (element) {
+      const mins = Math.floor(time / 60);
+      const sec = time % 60;
+      element.innerText = `${mins}m${sec}`;
+    }
+  });
+
+  socket.on("player joined", ({ id, state: { position }, team }) => {
+    game.playerJoined(id, position, team);
+    console.log(id, team);
   });
 
   socket.on("player left", (id) => {
     game.playerLeft(id);
+  });
+
+  socket.on("goal", ({ score, team, scorer }) => {
+    console.log(score, team, scorer);
+
+    // update score ui
+    setScores(score);
+
+    const goalElement = document.getElementById("goal");
+
+    if (goalElement) {
+      goalElement.style.visibility = "visible";
+
+      setTimeout(() => (goalElement.style.visibility = "hidden"), 5000);
+    }
   });
 
   socket.on("tick", (players, ball) => {

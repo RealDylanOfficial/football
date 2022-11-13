@@ -21,25 +21,4 @@ export class Goal extends THREE.Scene {
     // const mesh = new THREE.Mesh(geometry, material);
     // this.add(mesh);
   }
-
-  // constructor() {
-  //   super();
-
-  //   let geometry = new THREE.CylinderGeometry(0.1, 0.1, 3, 32);
-  //   const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  //   for (let X = -2; X < 3; X += 4) {
-  //     const cylinder = new THREE.Mesh(geometry, material);
-  //     cylinder.position.x = X;
-  //     cylinder.position.z = 0;
-  //     cylinder.position.y = -0.5;
-  //     this.add(cylinder);
-  //   }
-  //   geometry = new THREE.CylinderGeometry(0.1, 0.1, 4, 32);
-  //   const cylinder = new THREE.Mesh(geometry, material);
-  //   const rotation = new THREE.Vector3(0, 0, Math.PI / 2);
-  //   cylinder.rotation.setFromVector3(rotation);
-  //   //cylinder.position.x = 0;
-  //   //cylinder.position.z = 0;
-  //   cylinder.position.y = 0.92;
-  //   this.add(cylinder);
 }

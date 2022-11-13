@@ -1,7 +1,7 @@
 const GRAVITY = -10;
-const GRASS_E = 0.85;
+const GRASS_E = 0.5;
 const SIDE_E = 0.85;
-const NET_E = 0.5;
+const NET_E = 0.2;
 
 const express = require("express");
 const app = express();
@@ -22,6 +22,55 @@ const ball = {
 
 let goal = false;
 
+let lastKick = null;
+
+const teams = [new Set(), new Set()];
+
+const score = [0, 0];
+
+let timeLeft = 300;
+
+let timerInterval;
+
+function reset() {
+  ball.position = { x: 0, y: 4, z: 0 };
+  ball.velocity = { x: 0, y: 0, z: 0 };
+  ball.acceleration = { x: 0, y: GRAVITY, z: 0 };
+
+  goal = false;
+}
+
+function startGame() {
+  reset();
+
+  setTimeout(() => {}, 10000);
+
+  timerInterval = setInterval(() => {
+    timeLeft = timeLeft - 1;
+
+    if (timeLeft === 0) {
+      clearInterval(timerInterval);
+    }
+    
+    io.emit("update clock", timeLeft);
+  }, 1000);
+}
+
+function scoreGoal(team) {
+  goal = true;
+
+  score[team] += 1;
+
+  console.log("GOAL!", score, team, lastKick);
+
+  io.emit("goal", { score, team, scorer: lastKick });
+
+  setTimeout(() => {
+    reset();
+
+  }, 3000);
+}
+
 // map of the players
 const players = {};
 
@@ -35,8 +84,16 @@ function closeEnough(id) {
   );
 }
 
+startGame();
+
 io.on("connection", (socket) => {
   console.log("a user connected");
+
+  const team = teams[0].size > teams[1].size ? 1 : 0;
+
+  teams[team].add(socket.id);
+
+  console.log(teams);
 
   const position = { x: 0, y: 0, z: 0};
 
@@ -47,13 +104,15 @@ io.on("connection", (socket) => {
   socket.broadcast.emit("player joined", {
     id: socket.id,
     state: { position, velocity, looking },
+    team,
+    score,
   });
 
-  const state = { position, velocity, looking, input: new Set() };
+  const state = { position, velocity, looking, team, input: new Set() };
 
   players[socket.id] = state;
 
-  socket.emit("start", { id: socket.id, players });
+  socket.emit("start", { id: socket.id, players, team,  score });
 
   socket.on("input down", (input) => {
     // keep track of the input to handle next tick
@@ -77,6 +136,8 @@ io.on("connection", (socket) => {
 
   socket.on("tap", () => {
     if (closeEnough(socket.id)) {
+      lastKick = socket.id;
+
       const direction = { x: 0, y: 0, z: -1 };
 
       applyQuaternion(
@@ -88,14 +149,16 @@ io.on("connection", (socket) => {
 
       normalise(direction);
 
-      ball.velocity.x += direction.x * 5;
+      ball.velocity.x += direction.x * 4;
       ball.velocity.y += 2;
-      ball.velocity.z += direction.z * 5;
+      ball.velocity.z += direction.z * 4;
     }
   })
 
   socket.on("boot", () => {
     if (closeEnough(socket.id)) {
+      lastKick = socket.id;
+
       const direction = { x: 0, y: 0, z: -1 };
 
       applyQuaternion(
@@ -105,10 +168,6 @@ io.on("connection", (socket) => {
 
       normalise(direction);
 
-      console.log(direction);
-
-      console.log(ball.velocity);
-
       ball.velocity.x += direction.x * 20;
       ball.velocity.y += (direction.y + 0.5) * 20;
       ball.velocity.z += direction.z * 20;
@@ -117,6 +176,8 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     io.emit("player left", socket.id);
+
+    teams[team].delete(socket.id);
 
     delete players[socket.id];
   });
@@ -224,52 +285,64 @@ function update() {
 
   ball.position.z += ball.velocity.z * 0.016;
 
-  if (ball.position.z + RADIUS >= 20) {
-    if (ball.position.x - RADIUS > -3.75 && ball.position.x + RADIUS < 3.75) {
+
+  // behind the goal line
+  if (ball.position.z + RADIUS > 20) {
+    // Inside the goal
+    if (ball.position.x - RADIUS > -3.75 && ball.position.x + RADIUS < 3.75 && ball.position.y < 5.8) {
       if (!goal) {
-        goal = true;
-        console.log("GOAL!");
+        scoreGoal(1);
       }
-
-      if (ball.position.z - RADIUS >= -1) {
-        ball.position.z = 21 - RADIUS;
+    // rebound off the back of the net
+    else if (ball.position.z - RADIUS >= 21) {
+      ball.position.z = 21 - RADIUS;
         ball.velocity.z = -NET_E * ball.velocity.z;
-      }
+    } 
 
-      if (ball.position.x - RADIUS <= -3.75) {
-        ball.position.x = -3.75 + RADIUS;
-        ball.velocity.x = -NET_E * ball.velocity.x;
-      } else if (ball.position.x + RADIUS >= 3.75) {
-        ball.position.x = 3.75 + RADIUS;
-        ball.velocity.x = -NET_E * ball.velocity.x;
-      }
+    // rebound off the sides
+    if (ball.position.x - RADIUS <= -3.75) {
+      ball.position.x = -3.75 + RADIUS;
+      ball.velocity.x = -NET_E * ball.velocity.x;
+    } else if (ball.position.x + RADIUS >= 3.75) {
+      ball.position.x = 3.75 + RADIUS;
+      ball.velocity.x = -NET_E * ball.velocity.x;
     } else {
-      ball.position.z = 20 + RADIUS;
+      //
+      ball.position.z = 20 - RADIUS;
       ball.velocity.z = -SIDE_E * ball.velocity.z;
     }
-  } else if (ball.position.z - RADIUS <= -20) {
-    if (ball.position.x - RADIUS > -3.75 && ball.position.x + RADIUS < 3.75) {
+    } else {
+      // rebound off the wall
+      ball.position.z = 20 - RADIUS;
+      ball.velocity.z = -SIDE_E * ball.velocity.z;
+    }
+    // behind the goal line
+  } else if (ball.position.z - RADIUS < -20) { 
+    // in the goal
+    if (ball.position.x - RADIUS > -3.75 && ball.position.x + RADIUS < 3.75 && ball.position.y < 5.8) {
       if (!goal) {
-        goal = true;
-        console.log("GOAL!");
+        scoreGoal(0);
       }
-
-      if (ball.position.z - RADIUS <= -21) {
+    // rebound off the back the net
+    else if (ball.position.z - RADIUS <= -21) {
         ball.position.z = -21 + RADIUS;
         ball.velocity.z = -NET_E * ball.velocity.z;
-      }
+    }
 
-      if (ball.position.x - RADIUS <= -3.75) {
-        ball.position.x = -3.75 + RADIUS;
-        ball.velocity.x = -NET_E * ball.velocity.x;
-      } else if (ball.position.x + RADIUS >= 3.75) {
-        ball.position.x = 3.75 + RADIUS;
-        ball.velocity.x = -NET_E * ball.velocity.x;
-      }
+    // rebound of the back wall
+    if (ball.position.x - RADIUS <= -3.75) {
+      ball.position.x = -3.75 + RADIUS;
+      ball.velocity.x = -NET_E * ball.velocity.x;
+    } else if (ball.position.x + RADIUS >= 3.75) {
+      ball.position.x = 3.75 + RADIUS;
+      ball.velocity.x = -NET_E * ball.velocity.x;
+    }
     } else {
       ball.position.z = -20 + RADIUS;
       ball.velocity.z = -SIDE_E * ball.velocity.z;
     }
+
+    // rebound off the side walls
   } else if (ball.position.x + RADIUS <= -15) {
     ball.position.x = -15 + RADIUS;
     ball.velocity.x = -SIDE_E * ball.velocity.x;

@@ -3,16 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hackathon</title>
     <style>
       body {
         margin: 0;
       }
+
+      .container {
+        width: 100%;
+
+        margin: 20px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        position: absolute;
+
+        z-index: 1000;
+      }
+
+      .scoreboard {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        background-color: black;
+
+        border-radius: 10px;
+      }
+
+      .score {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        padding: 10px;
+      }
+
+      #timer {
+        color: white;
+        
+        font-family: "Inter";
+
+        margin-bottom: 5px;
+      }
+
+      .team {
+        font-size: 30px;
+
+        border-radius: 5px;
+
+        color: white;
+
+        padding: 10px 20px;
+
+        font-family: "Inter";
+      }
+
+      #goal {
+        font-family: "Inter";
+
+        color: white;
+      }
     </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <div class="container">
+      <div class="scoreboard">
+        <div class="score">
+          <span class="team" id="team0" style="background-color: red">0</span>
+          <span>-</span>
+          <span class="team" id="team1" style="background-color: blue">0</span>
+        </div>
+        <div id="timer">
+          5m
+        </div>
+        <div id="goal" style="visibility:hidden;">GOAL</div>
+      </div>
+    </div>
+
+    
   </body>
 </html>
