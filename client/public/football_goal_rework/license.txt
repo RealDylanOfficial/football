@@ -1,0 +1,11 @@
+Model Information:
+* title:	Football Goal Rework
+* source:	https://sketchfab.com/3d-models/football-goal-rework-26012ee6503f462c86252a35c9d35a89
+* author:	Geri3D (https://sketchfab.com/Geri3D)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Football Goal Rework" (https://sketchfab.com/3d-models/football-goal-rework-26012ee6503f462c86252a35c9d35a89) by Geri3D (https://sketchfab.com/Geri3D) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
